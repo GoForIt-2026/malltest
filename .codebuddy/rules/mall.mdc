@@ -1,0 +1,68 @@
+---
+description: 
+alwaysApply: true
+enabled: true
+updatedAt: 2026-10-02T19:10:19.845Z
+provider: 
+---
+
+# 项目概述
+项目 mall：原生微信小程序 + CloudBase 云开发（微信开发者工具重建后的初始模板）。
+
+根目录结构：
+```
+d:/mall
+├─ project.config.json        # 小程序项目主配置（miniprogramRoot 指向 wechart）
+├─ project.private.config.json
+├─ PRD.md                     # 咖啡点单小程序需求 + Figma 设计规范（UI/业务唯一依据）
+├─ CODEBUDDY.md               # 项目档案（命令 + 架构 + 业务规则 + 设计规范）
+├─ wechart/                   # 小程序前端（用户端）
+│  ├─ app.js / app.json / app.wxss
+│  ├─ pages/index/            # 云开发连通性自检页（业务页面待按 PRD 开发）
+│  ├─ components/navigation-bar/
+│  └─ sitemap.json
+└─ admin/quickstart/          # 已部署的连通性云函数
+```
+
+产品目标（详见 `PRD.md`）：咖啡门店点单小程序，流程为 首页选品→商品定制→购物车→下单支付→取餐码核销→订单查询；页面 `index / goods-detail / cart / checkout / take-code / order-list`。
+
+## 目录规则
+- 目录名固定小写：`wechart`（前端）、`admin`（后端），不得写成 Wechart / Admin 等其他大小写形式。
+- wechart：存放小程序 app 配置、pages、components、utils、images，小程序全部前端代码。
+- admin：存放所有云函数、数据库处理、权限校验，数据库读写逻辑统一放在此目录；每个云函数为 admin 下的同名子目录（含 index.js + package.json）。
+- 小程序渲染器为 skyline + glass-easel，新增页面/组件需沿用现有原生写法。
+
+## 代码规范
+1. 使用原生小程序语法，禁止Taro、Uniapp、Vue等跨端框架，不使用window/document。
+2. JS使用ES6，const/let，async/await，禁用var。
+3. 样式单位rpx；文件名、样式类名：小写+下划线。
+4. 数据库读写、业务逻辑放admin；wechart只负责页面展示、交互、调用云函数。
+5. 请求增加try-catch捕获异常，前端报错用wx.showToast提示。
+6. 小程序云开发天然免登录，禁止生成登录页/登录流程；用户身份在云函数中用 `cloud.getWXContext().OPENID` 获取。
+
+## 配置维护规则（重建/变更项目时必做）
+1. 根目录 `project.config.json` 必须保持 `miniprogramRoot: "wechart/"`、`cloudfunctionRoot: "admin/"`，否则开发者工具打开根目录找不到 app.json。
+2. appid、云环境 ID 只能有一份权威值，禁止多处写不同值；变更时同步所有配置文件。
+
+## 云开发接入状态（2026-10-07）
+- 环境类型：`RuntimeMode=nosql`（PG/MySQL 均未开通）→ 数据读写一律用 NoSQL 集合（`wx.cloud.database()` / `wx-server-sdk`），禁止用 `app.rdb()`、MySQL 工具。
+- 环境已绑定小程序 appid `wxbefe84ebacb15141`（EnvInfo.UserInfo.WxAppId 已确认）。
+- 小程序端：`wechart/app.js` 中 `wx.cloud.init({ traceUser: true })`，走默认环境。
+- 云函数：代码在 `admin/<函数名>/`，已部署 `quickstart`（Nodejs16.13，handler `index.main`，云端调用已验证通过）。
+
+## 当前权威配置（2026-10-07 更新）
+- 小程序 appid（个人开发者主体）：两份 `project.config.json`（根目录 + `wechart/`）均为 `wxbefe84ebacb15141`。
+- CloudBase 环境：`cloud1-d0gms7rwe7d29a38f`（别名 cloud1，个人版 `baas_personal`，ap-shanghai，默认环境，状态 NORMAL）。
+- 代码中不硬编码环境 ID：小程序端用 `wx.cloud.init()` 走默认环境，云函数端用 `cloud.DYNAMIC_CURRENT_ENV`；确需指定时由用户确认后再写。
+3. 结构与本档案不一致时，先更新本档案再写代码。
+
+## CodeBuddy执行规则
+1. 生成代码严格区分目录，前端写wechart，云函数写admin，不要混淆。
+2. 修改优先增量修改，不直接全量覆盖文件；输出代码标注完整文件路径。
+3. 新增页面提醒在wechart/app.json注册；新增云函数提醒上传部署。
+4. 目录/架构大改动时，提醒是否执行`/init`更新项目档案。
+
+## 禁止
+❌ 前后端目录混用
+❌ 私自引入第三方框架，新增依赖先询问
+❌ 硬编码密钥、云环境ID等敏感信息

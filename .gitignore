@@ -1,0 +1,23 @@
+# 依赖与构建产物
+node_modules/
+miniprogram_npm/
+package-lock.json
+dist/
+.tmp/
+.temp/
+
+# 微信开发者工具私有配置（本地调试设置，不入库）
+project.private.config.json
+
+# 第三方体积较大的规则包（保留项目自身规则 .codebuddy/rules/mall.mdc）
+.codebuddy/rules/tcb/
+
+# 编辑器 / IDE
+.vscode/
+.idea/
+
+# 系统与日志文件
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
